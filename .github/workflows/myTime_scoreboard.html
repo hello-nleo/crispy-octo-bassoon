@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>myTime Scoreboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --color-bg-primary: #ffffff;
+    --color-bg-secondary: #f4f3f0;
+    --color-text-primary: #1a1a18;
+    --color-text-secondary: #6b6b65;
+    --color-border: rgba(0,0,0,0.12);
+    --color-border-hover: rgba(0,0,0,0.25);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-bg-primary: #1c1c1a;
+      --color-bg-secondary: #252523;
+      --color-text-primary: #f0ede8;
+      --color-text-secondary: #8a8a84;
+      --color-border: rgba(255,255,255,0.1);
+      --color-border-hover: rgba(255,255,255,0.22);
+    }
+  }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    min-height: 100vh;
+    padding: 2rem 1rem 3rem;
+  }
+
+  .container {
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2.6rem;
+    letter-spacing: -1px;
+    color: var(--color-text-primary);
+  }
+
+  .logo span { color: #e85d26; }
+
+  .subtitle {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .period-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--color-bg-primary);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 10px 16px;
+    margin-bottom: 1.5rem;
+    font-size: 12px;
+  }
+
+  .period-label { color: var(--color-text-secondary); letter-spacing: 0.05em; }
+  .period-dates { font-weight: 500; color: var(--color-text-primary); font-size: 12px; }
+  .period-countdown { color: #e85d26; font-size: 11px; font-weight: 500; }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-card {
+    background: var(--color-bg-primary);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    text-align: center;
+  }
+
+  .stat-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: 1;
+  }
+
+  .stat-val.green { color: #2e9e5b; }
+  .stat-val.orange { color: #e85d26; }
+
+  .stat-lbl {
+    font-size: 10px;
+    color: var(--color-text-secondary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    margin-bottom: 8px;
+    padding-left: 2px;
+  }
+
+  .progress-wrap { margin-bottom: 1.5rem; }
+
+  .progress-bar-bg {
+    height: 8px;
+    background: var(--color-bg-secondary);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 6px;
+    border: 0.5px solid var(--color-border);
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: #2e9e5b;
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(.22,1,.36,1);
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+  }
+
+  .leaderboard { margin-bottom: 1.5rem; }
+
+  .row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    margin-bottom: 6px;
+    background: var(--color-bg-primary);
+    transition: background 0.15s;
+  }
+
+  .row.done {
+    background: #f0faf4;
+    border-color: #a8d8b8;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .row.done {
+      background: #0e2e1c;
+      border-color: #1e5c3a;
+    }
+  }
+
+  .rank { font-size: 11px; color: var(--color-text-secondary); text-align: center; }
+  .rank.top { color: #e85d26; font-weight: 500; }
+
+  .person { display: flex; align-items: center; gap: 8px; }
+
+  .avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+
+  .name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+
+  .streak { font-size: 10px; color: var(--color-text-secondary); margin-top: 1px; }
+  .streak .fire { color: #e85d26; }
+
+  .score-badge {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--color-text-primary);
+    min-width: 28px;
+    text-align: right;
+  }
+
+  .submit-btn {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid #e85d26;
+    color: #e85d26;
+    background: transparent;
+    transition: all 0.15s;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+
+  .submit-btn:hover { background: #e85d26; color: #fff; }
+
+  .done-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    background: #2e9e5b;
+    color: #fff;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+
+  .reset-btn {
+    display: block;
+    width: 100%;
+    margin-top: 1rem;
+    padding: 9px;
+    background: transparent;
+    border: 0.5px solid var(--color-border-hover);
+    border-radius: var(--radius-md);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+
+  .reset-btn:hover { color: var(--color-text-primary); }
+
+  .history-section { margin-top: 1.5rem; }
+
+  .history-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    font-size: 12px;
+    border-bottom: 0.5px solid var(--color-border);
+    color: var(--color-text-secondary);
+  }
+
+  .history-row:last-child { border-bottom: none; }
+  .history-score { font-weight: 500; color: var(--color-text-primary); }
+
+  .confetti-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #2e9e5b;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 40px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    transition: transform 0.35s cubic-bezier(.34,1.56,.64,1);
+    z-index: 10000;
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">my<span>Time</span> scoreboard</div>
+    <div class="subtitle">Fortnightly timesheet tracker</div>
+  </div>
+
+  <div class="period-bar">
+    <div>
+      <div class="period-label">Current period</div>
+      <div class="period-dates" id="period-dates">—</div>
+    </div>
+    <div class="period-countdown" id="countdown">—</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-val green" id="stat-done">0</div>
+      <div class="stat-lbl">submitted</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val orange" id="stat-pending">0</div>
+      <div class="stat-lbl">pending</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="stat-rate">0%</div>
+      <div class="stat-lbl">completion</div>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>Team progress</span>
+      <span id="progress-text">0 / 0</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="section-label">Leaderboard — all-time points</div>
+  <div class="leaderboard" id="leaderboard"></div>
+
+  <button class="reset-btn" id="reset-period-btn">↺ Simulate new period (reset current)</button>
+
+  <div class="history-section">
+    <div class="section-label">Period history</div>
+    <div id="history-list"></div>
+  </div>
+</div>
+
+<canvas class="confetti-canvas" id="confetti-canvas"></canvas>
+<div class="toast" id="toast"></div>
+
+<script>
+const TEAM = [
+  { id:1,  name:'Wei Jie Tan',    initials:'WT', color:'#4f7be8', bg:'#dde8fc' },
+  { id:2,  name:'Hui Ling Lim',   initials:'HL', color:'#2e9e5b', bg:'#d5f0e2' },
+  { id:3,  name:'Rajan Krishnan', initials:'RK', color:'#e85d26', bg:'#fcddd0' },
+  { id:4,  name:'Mei Xin Ng',     initials:'MN', color:'#9b59b6', bg:'#ead6f5' },
+  { id:5,  name:'Faizal Rahman',  initials:'FR', color:'#c0392b', bg:'#f9d5d3' },
+  { id:6,  name:'Siew Peng Koh',  initials:'SK', color:'#1a7a6e', bg:'#c9ecea' },
+  { id:7,  name:'Arjun Pillai',   initials:'AP', color:'#d4691e', bg:'#fde8d2' },
+  { id:8,  name:'Bing Hui Chan',  initials:'BC', color:'#2471a3', bg:'#d4e8f7' },
+  { id:9,  name:'Nur Hidayah',    initials:'NH', color:'#7d3c98', bg:'#e8d5f5' },
+  { id:10, name:'Xiu Ying Goh',   initials:'XG', color:'#1e8449', bg:'#d0f0dc' },
+];
+
+function getStorage(key) {
+  try { return JSON.parse(localStorage.getItem(key)); } catch(e) { return null; }
+}
+function setStorage(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+}
+
+function getFortnight() {
+  const now = new Date();
+  const epoch = new Date('2025-01-06');
+  const diffDays = Math.floor((now - epoch) / 86400000);
+  const periodNum = Math.floor(diffDays / 14);
+  const start = new Date(epoch.getTime() + periodNum * 14 * 86400000);
+  const end = new Date(start.getTime() + 13 * 86400000);
+  return { start, end, periodNum };
+}
+
+function formatDate(d) {
+  return d.toLocaleDateString('en-SG', { day:'numeric', month:'short', year:'numeric' });
+}
+
+function daysLeft(end) {
+  return Math.ceil((end - new Date()) / 86400000);
+}
+
+let state = getStorage('myte_state') || { points:{}, currentPeriodKey:null, currentSubmissions:{}, history:[] };
+
+TEAM.forEach(p => {
+  if (state.points[p.id] === undefined) state.points[p.id] = Math.floor(Math.random() * 8);
+});
+
+function saveState() { setStorage('myte_state', state); }
+
+function checkPeriodReset() {
+  const { start } = getFortnight();
+  const key = 'myte_' + start.toISOString().slice(0,10);
+  if (state.currentPeriodKey !== key) {
+    if (state.currentPeriodKey && Object.keys(state.currentSubmissions).length > 0) {
+      const count = Object.values(state.currentSubmissions).filter(Boolean).length;
+      state.history.unshift({ key: state.currentPeriodKey, count, total: TEAM.length, date: new Date().toLocaleDateString('en-SG',{month:'short',year:'numeric'}) });
+      if (state.history.length > 6) state.history.pop();
+    }
+    state.currentPeriodKey = key;
+    state.currentSubmissions = {};
+    saveState();
+  }
+}
+
+checkPeriodReset();
+
+function submit(id) {
+  state.currentSubmissions[id] = true;
+  state.points[id] = (state.points[id] || 0) + 1;
+  saveState();
+  render();
+  celebrate(id);
+}
+
+function render() {
+  const { start, end } = getFortnight();
+  document.getElementById('period-dates').textContent = formatDate(start) + ' → ' + formatDate(end);
+  const days = daysLeft(end);
+  document.getElementById('countdown').textContent = days <= 0 ? 'closes today' : days + ' day' + (days===1?'':'s') + ' left';
+
+  const done = TEAM.filter(p => state.currentSubmissions[p.id]).length;
+  const total = TEAM.length;
+  document.getElementById('stat-done').textContent = done;
+  document.getElementById('stat-pending').textContent = total - done;
+  document.getElementById('stat-rate').textContent = Math.round(done/total*100) + '%';
+  document.getElementById('progress-text').textContent = done + ' / ' + total;
+  document.getElementById('progress-fill').style.width = Math.round(done/total*100) + '%';
+
+  const sorted = [...TEAM].sort((a,b) => (state.points[b.id]||0) - (state.points[a.id]||0));
+
+  const lb = document.getElementById('leaderboard');
+  lb.innerHTML = '';
+  sorted.forEach((p, i) => {
+    const pts = state.points[p.id] || 0;
+    const isDone = state.currentSubmissions[p.id];
+    const row = document.createElement('div');
+    row.className = 'row' + (isDone ? ' done' : '');
+    row.innerHTML = `
+      <div class="rank ${i<3?'top':''}">${i===0?'①':i===1?'②':i===2?'③':i+1}</div>
+      <div class="person">
+        <div class="avatar" style="background:${p.bg};color:${p.color}">${p.initials}</div>
+        <div>
+          <div class="name">${p.name}</div>
+          <div class="streak"><span class="fire">●</span> ${pts} pts all-time</div>
+        </div>
+      </div>
+      <div class="score-badge">${pts}</div>
+      <div>${isDone
+        ? `<span class="done-badge">✓ done</span>`
+        : `<button class="submit-btn" data-id="${p.id}">Submit</button>`
+      }</div>
+    `;
+    lb.appendChild(row);
+  });
+
+  lb.querySelectorAll('.submit-btn').forEach(btn => {
+    btn.addEventListener('click', () => submit(Number(btn.dataset.id)));
+  });
+
+  const hist = document.getElementById('history-list');
+  if (state.history.length === 0) {
+    hist.innerHTML = '<div class="history-row" style="color:var(--color-text-secondary);font-size:12px;">No previous periods yet.</div>';
+  } else {
+    hist.innerHTML = state.history.map(h => `
+      <div class="history-row">
+        <span>${h.date} · ${h.key}</span>
+        <span class="history-score">${h.count}/${h.total} submitted</span>
+      </div>
+    `).join('');
+  }
+}
+
+document.getElementById('reset-period-btn').addEventListener('click', () => {
+  if (Object.keys(state.currentSubmissions).length > 0) {
+    const count = Object.values(state.currentSubmissions).filter(Boolean).length;
+    state.history.unshift({ key: state.currentPeriodKey, count, total: TEAM.length, date: new Date().toLocaleDateString('en-SG',{month:'short',year:'numeric'}) });
+    if (state.history.length > 6) state.history.pop();
+  }
+  state.currentSubmissions = {};
+  const { start } = getFortnight();
+  const d = new Date(start);
+  d.setDate(d.getDate() + 14);
+  state.currentPeriodKey = 'myte_' + d.toISOString().slice(0,10);
+  saveState();
+  render();
+  showToast('New period started!');
+});
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function celebrate(personId) {
+  const person = TEAM.find(p => p.id === personId);
+  showToast(person.name + ' submitted myTime! +1 point');
+
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+
+  const particles = [];
+  const colors = ['#e85d26','#2e9e5b','#4f7be8','#f7c948','#9b59b6','#1a7a6e'];
+  for (let i = 0; i < 120; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: -10 - Math.random() * 100,
+      w: 6 + Math.random() * 8,
+      h: 3 + Math.random() * 5,
+      vx: (Math.random() - 0.5) * 4,
+      vy: 2 + Math.random() * 4,
+      rot: Math.random() * Math.PI * 2,
+      vrot: (Math.random() - 0.5) * 0.15,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      life: 1
+    });
+  }
+
+  let frame;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      if (p.y > canvas.height + 20) return;
+      alive = true;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.08;
+      p.rot += p.vrot;
+      p.life -= 0.008;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+    });
+    if (alive) frame = requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  if (frame) cancelAnimationFrame(frame);
+  draw();
+}
+
+render();
+</script>
+</body>
+</html>
